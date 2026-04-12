@@ -1,19 +1,12 @@
 # =============================================================================
-# Docker Compose - Producción Laravel
+# Docker Compose - Producción Laravel (Portainer)
 # =============================================================================
-# Para usar con múltiples clientes en la misma VPS, copiar este archivo
-# y cambiar las siguientes variables en el .env:
-#   - COMPOSE_PROJECT_NAME  (nombre único por cliente)
-#   - APP_PORT              (puerto único por cliente)
-#   - PMA_PORT              (puerto phpMyAdmin único por cliente)
-#   - DB_DATABASE           (nombre de la base de datos del cliente)
-#   - DB_PASSWORD           (contraseña de MySQL)
+# Base de datos externa en Hostinger.
+# Variables de entorno se configuran en stack.env o en Portainer.
 #
 # Ejemplo:
-#   COMPOSE_PROJECT_NAME=cliente_acme
-#   APP_PORT=8081
-#   PMA_PORT=8181
-#   DB_DATABASE=acme_db
+#   COMPOSE_PROJECT_NAME=labelle
+#   APP_PORT=8080
 # =============================================================================
 
 services:
@@ -40,10 +33,10 @@ services:
       APP_TYPE: ${APP_TYPE:-full}
       LOG_CHANNEL: ${LOG_CHANNEL:-stack}
       DB_CONNECTION: mysql
-      DB_HOST: db
-      DB_PORT: 3306
-      DB_DATABASE: ${DB_DATABASE:-labelle_db}
-      DB_USERNAME: ${DB_USERNAME:-labelle}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
       QUEUE_CONNECTION: database
       CACHE_DRIVER: ${CACHE_DRIVER:-file}
@@ -69,9 +62,6 @@ services:
     volumes:
       - app_storage:/var/www/html/storage
       - app_vendor:/var/www/html/vendor
-    depends_on:
-      db:
-        condition: service_healthy
     networks:
       - app_network
     healthcheck:
@@ -86,61 +76,7 @@ services:
         max-size: "20m"
         max-file: "5"
 
-  # ---------------------------------------------------------------------------
-  # MySQL 8.0
-  # ---------------------------------------------------------------------------
-  db:
-    image: mysql:8.0
-    container_name: ${COMPOSE_PROJECT_NAME:-labelle}_db
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
-      MYSQL_DATABASE: ${DB_DATABASE:-laravel_db}
-      MYSQL_USER: ${DB_USERNAME:-laravel}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - db_data:/var/lib/mysql
-    ports:
-      - "${DB_PORT_EXTERNAL:-3306}:3306"
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-rootpassword}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    command: >
-      --default-authentication-plugin=mysql_native_password
-      --character-set-server=utf8mb4
-      --collation-server=utf8mb4_unicode_ci
-      --innodb-buffer-pool-size=256M
-      --max-connections=200
-    networks:
-      - app_network
-
-  # ---------------------------------------------------------------------------
-  # phpMyAdmin
-  # ---------------------------------------------------------------------------
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin:latest
-    container_name: ${COMPOSE_PROJECT_NAME:-labelle}_pma
-    restart: unless-stopped
-    ports:
-      - "${PMA_PORT:-8180}:80"
-    environment:
-      PMA_HOST: db
-      PMA_PORT: 3306
-      PMA_USER: root
-      PMA_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
-      UPLOAD_LIMIT: 100M
-    depends_on:
-      db:
-        condition: service_healthy
-    networks:
-      - app_network
-
 volumes:
-  db_data:
-    driver: local
   app_storage:
     driver: local
   app_vendor:

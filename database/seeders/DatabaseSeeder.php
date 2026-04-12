@@ -82,6 +82,9 @@ class DatabaseSeeder extends Seeder
             'symbol'=> "$",
             'exchange'=> 500
         ]);
+
+        //Add activity seeder
+        $this->call(ActivitySeeder::class);
     }
 
     private function cleanDatabase()
