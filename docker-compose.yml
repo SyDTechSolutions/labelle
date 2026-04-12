@@ -1,0 +1,137 @@
+# =============================================================================
+# Docker Compose - Producción Laravel
+# =============================================================================
+# Para usar con múltiples clientes en la misma VPS, copiar este archivo
+# y cambiar las siguientes variables en el .env:
+#   - COMPOSE_PROJECT_NAME  (nombre único por cliente)
+#   - APP_PORT              (puerto único por cliente)
+#   - PMA_PORT              (puerto phpMyAdmin único por cliente)
+#   - DB_DATABASE           (nombre de la base de datos del cliente)
+#   - DB_PASSWORD           (contraseña de MySQL)
+#
+# Ejemplo:
+#   COMPOSE_PROJECT_NAME=cliente_acme
+#   APP_PORT=8081
+#   PMA_PORT=8181
+#   DB_DATABASE=acme_db
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # Aplicación Laravel (PHP-FPM + Nginx + Cron + Queue Worker)
+  # ---------------------------------------------------------------------------
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ${COMPOSE_PROJECT_NAME:-laravel}_app
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:80"
+    environment:
+      - APP_NAME=${APP_NAME:-'Proyecto Base'}
+      - APP_ENV=${APP_ENV:-production}
+      - APP_KEY=${APP_KEY}
+      - APP_DEBUG=${APP_DEBUG:-false}
+      - APP_URL=${APP_URL:-http://localhost}
+      - APP_TYPE=${APP_TYPE:-individual}
+      - LOG_CHANNEL=${LOG_CHANNEL:-stack}
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-laravel_db}
+      - DB_USERNAME=${DB_USERNAME:-laravel}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - QUEUE_CONNECTION=database
+      - CACHE_DRIVER=${CACHE_DRIVER:-file}
+      - SESSION_DRIVER=${SESSION_DRIVER:-file}
+      - SESSION_LIFETIME=${SESSION_LIFETIME:-120}
+      - MAIL_MAILER=${MAIL_MAILER:-smtp}
+      - MAIL_HOST=${MAIL_HOST:-smtp.titan.email}
+      - MAIL_PORT=${MAIL_PORT:-587}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - MAIL_ENCRYPTION=${MAIL_ENCRYPTION:-null}
+      - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS}
+      - MAIL_FROM_NAME=${MAIL_FROM_NAME:-'${APP_NAME}'}
+      - HACIENDA_OAUTH_URI=${HACIENDA_OAUTH_URI:-https://idp.comprobanteselectronicos.go.cr/auth/realms/rut/protocol/openid-connect/token}
+      - HACIENDA_BASE_URI=${HACIENDA_BASE_URI:-https://api.comprobanteselectronicos.go.cr/recepcion/v1/}
+      - HACIENDA_LOGOUT_URI=${HACIENDA_LOGOUT_URI:-https://idp.comprobanteselectronicos.go.cr/auth/realms/rut/protocol/openid-connect/logout}
+      - HACIENDA_CLIENT_ID=${HACIENDA_CLIENT_ID:-api-prod}
+      - HACIENDA_CLIENT_SECRET=${HACIENDA_CLIENT_SECRET}
+      - API_FACTURA_URL_SANDBOX=${API_FACTURA_URL_SANDBOX:-http://82.25.86.125:8081/api}
+      - API_FACTURA_URL_PRODUCTION=${API_FACTURA_URL_PRODUCTION:-http://82.25.86.125:8082/api}
+      - API_ENV=${API_ENV:-sandbox}
+      - TELESCOPE_ENABLED=${TELESCOPE_ENABLED:-false}
+    volumes:
+      - app_storage:/var/www/html/storage
+      - app_backup:/var/www/html/storage/app/backups
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app_network
+
+  # ---------------------------------------------------------------------------
+  # MySQL 8.0
+  # ---------------------------------------------------------------------------
+  db:
+    image: mysql:8.0
+    container_name: ${COMPOSE_PROJECT_NAME:-laravel}_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${DB_DATABASE:-laravel_db}
+      MYSQL_USER: ${DB_USERNAME:-laravel}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "${DB_PORT_EXTERNAL:-3306}:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-rootpassword}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    command: >
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --innodb-buffer-pool-size=256M
+      --max-connections=200
+    networks:
+      - app_network
+
+  # ---------------------------------------------------------------------------
+  # phpMyAdmin
+  # ---------------------------------------------------------------------------
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-laravel}_pma
+    restart: unless-stopped
+    ports:
+      - "${PMA_PORT:-8180}:80"
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
+      UPLOAD_LIMIT: 100M
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app_network
+
+volumes:
+  db_data:
+    driver: local
+  app_storage:
+    driver: local
+  app_backup:
+    driver: local
+
+networks:
+  app_network:
+    driver: bridge

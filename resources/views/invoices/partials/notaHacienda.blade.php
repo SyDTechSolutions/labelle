@@ -1,0 +1,2 @@
+<!-- Autorizada mediante resolución Nº DGT-R-48-2016 del 7 de octubre de 2016 -->
+{{ $setting->notes }}

@@ -1,0 +1,70 @@
+
+// Fonts
+@import url("https://fonts.googleapis.com/css?family=Raleway:300,400,600");
+
+// Variables
+@import "variables";
+
+// Bootstrap
+@import '~bootstrap/scss/bootstrap';
+@import "loading";
+@import "iconic.scss";
+@import "divtables";
+
+@media print {
+    body{
+        font-family: sans-serif;
+    }
+}    
+.navbar-laravel {
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.level { display: flex; align-items: center; }
+.level-item { margin-right: 1em; }
+.flex { flex: 1; }
+
+.actions a{
+  color: white;//#0056b3;
+  font-size: 1rem;
+}
+.square{
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    vertical-align: middle;
+}
+.square-red{
+    background-color: #f5c6cb;
+}
+ @media print{
+    button, a.btn{
+        display:none !important;
+    }
+    a{
+        text-decoration:none !important;
+        color: #212529;
+    }
+    .card, .card-body, .container{
+        background-color: white !important;
+    }
+    .filters{
+        display: none;
+    }
+}
+
+.box-exo{
+    //position: absolute;
+    //background: wheat;
+    padding: 0 1rem;
+    //z-index: 2;
+    h4{
+        margin-top: .5rem;
+    }
+    .compact-exo{
+        cursor: pointer;
+    }
+}
+
+
