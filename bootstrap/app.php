@@ -56,8 +56,8 @@ return Application::configure(basePath: dirname(__DIR__))
         \App\Providers\EventServiceProvider::class,
         \App\Providers\TelescopeServiceProvider::class,
         \Barryvdh\DomPDF\ServiceProvider::class,
-        // Solo cargar Debugbar en desarrollo
-        in_array(env('APP_ENV'), ['local', 'development']) ? \Barryvdh\Debugbar\ServiceProvider::class : null,
+        // Solo cargar Debugbar en desarrollo si está instalado
+        class_exists(\Barryvdh\Debugbar\ServiceProvider::class) ? \Barryvdh\Debugbar\ServiceProvider::class : null,
     ]))
     ->withExceptions(function (Exceptions $exceptions) {
         //
