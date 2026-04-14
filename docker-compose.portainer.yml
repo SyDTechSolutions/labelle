@@ -1,0 +1,232 @@
+# ============================================================
+# PWA-POS — Stack de DESARROLLO para Portainer (Standalone)
+#
+# Despliegue en Portainer:
+#   1. Stacks → Add stack → Repository
+#   2. Compose path: docker-compose.portainer.yml
+#   3. Configurar variables en "Environment variables"
+# ============================================================
+
+services:
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        INSTALL_DEV_DEPS: "true"
+    pull_policy: build
+    image: pwa-pos-app:${APP_VERSION:-dev}
+    container_name: sydposcr-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - storage:/var/www/html/storage
+      - vendor:/var/www/html/vendor
+    environment:
+      # ----- Aplicación -----
+      APP_NAME: ${APP_NAME:-SYDPROCR}
+      APP_ENV: local
+      APP_KEY: ${APP_KEY:-}
+      APP_DEBUG: "true"
+      APP_URL: ${APP_URL:-https://dev.sydposcr.com}
+      ASSET_URL: ${ASSET_URL:-https://dev.sydposcr.com}
+      APP_VERSION: ${APP_VERSION:-1.0.0}
+      APP_LOCALE: ${APP_LOCALE:-es}
+      APP_FALLBACK_LOCALE: en
+      APP_FAKER_LOCALE: en_US
+      APP_MAINTENANCE_DRIVER: file
+      PHP_CLI_SERVER_WORKERS: 4
+      BCRYPT_ROUNDS: 12
+
+      # ----- Logs -----
+      LOG_CHANNEL: stack
+      LOG_STACK: single
+      LOG_DEPRECATIONS_CHANNEL: "null"
+      LOG_LEVEL: debug
+
+      # ----- Base de datos -----
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE:-pwaposdb}
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-secret123}
+
+      # ----- Redis -----
+      REDIS_CLIENT: phpredis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-null}
+
+      # ----- Session / Cache / Queue -----
+      SESSION_DRIVER: redis
+      SESSION_LIFETIME: ${SESSION_LIFETIME:-120}
+      SESSION_ENCRYPT: "false"
+      SESSION_PATH: /
+      SESSION_DOMAIN: "null"
+      BROADCAST_CONNECTION: log
+      FILESYSTEM_DISK: local
+      QUEUE_CONNECTION: redis
+      CACHE_STORE: redis
+
+      # ----- Mail (Mailpit captura los correos en :8025) -----
+      MAIL_MAILER: smtp
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+      MAIL_USERNAME: ""
+      MAIL_PASSWORD: ""
+      MAIL_ENCRYPTION: ""
+      MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-dev@sydposcr.com}
+      MAIL_FROM_NAME: ${APP_NAME:-SYDPROCR}
+
+      # ----- Horizon -----
+      HORIZON_NAME: ${HORIZON_NAME:-null}
+      HORIZON_PATH: horizon
+      HORIZON_PREFIX: pwapos_horizon
+
+      # ----- Pusher / Reverb (WebSockets) -----
+      PUSHER_APP_ID: ${PUSHER_APP_ID:-142213}
+      PUSHER_APP_KEY: ${PUSHER_APP_KEY:-iexaby3h7q3le25g2kbd}
+      PUSHER_APP_SECRET: ${PUSHER_APP_SECRET:-o1jvmomfzqni3nyw1n7b}
+      PUSHER_HOST: redis
+      PUSHER_PORT: 8080
+      PUSHER_SCHEME: http
+      PUSHER_APP_CLUSTER: ""
+      REVERB_APP_ID: ${REVERB_APP_ID:-142213}
+      REVERB_APP_KEY: ${REVERB_APP_KEY:-iexaby3h7q3le25g2kbd}
+      REVERB_APP_SECRET: ${REVERB_APP_SECRET:-o1jvmomfzqni3nyw1n7b}
+      REVERB_HOST: ${REVERB_HOST:-localhost}
+      REVERB_PORT: ${REVERB_PORT:-8080}
+      REVERB_SCHEME: http
+      VITE_REVERB_APP_KEY: ${REVERB_APP_KEY:-iexaby3h7q3le25g2kbd}
+      VITE_REVERB_HOST: ${REVERB_HOST:-localhost}
+      VITE_REVERB_PORT: ${REVERB_PORT:-8080}
+      VITE_REVERB_SCHEME: http
+      VITE_APP_NAME: ${APP_NAME:-SYDPROCR}
+
+      # ----- AWS (S3) -----
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
+      AWS_BUCKET: ${AWS_BUCKET:-}
+      AWS_USE_PATH_STYLE_ENDPOINT: "false"
+
+      # ----- Telescope -----
+      TELESCOPE_ENABLED: "true"
+
+      # ----- Hacienda API -----
+      USER_API_CREDENTIALS_SANDBOX: ${USER_API_CREDENTIALS_SANDBOX:-}
+      PASSWORD_API_CREDENTIALS_SANDBOX: ${PASSWORD_API_CREDENTIALS_SANDBOX:-}
+      USER_API_CREDENTIALS_PRODUCTION: ${USER_API_CREDENTIALS_PRODUCTION:-}
+      PASSWORD_API_CREDENTIALS_PRODUCTION: ${PASSWORD_API_CREDENTIALS_PRODUCTION:-}
+      API_FACTURA_URL_SANDBOX: ${API_FACTURA_URL_SANDBOX:-http://82.25.86.125:8081/api}
+      API_FACTURA_URL_PRODUCTION: ${API_FACTURA_URL_PRODUCTION:-http://82.25.86.125:8082/api}
+      API_ENV: ${API_ENV:-sandbox}
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    ports:
+      - "${APP_PORT:-9080}:80"
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost/healthz"]
+      interval: 1h
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+  # vite: eliminado en Portainer — los assets ya se compilan dentro del
+  #       Dockerfile con 'npm run build'. Solo tiene sentido en dev local.
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: sydposcr-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-pwaposdb}
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret123}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    ports:
+      - "9432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: sydposcr-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    networks:
+      - app-network
+    ports:
+      - "9379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: sydposcr-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@admin.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    networks:
+      - app-network
+    ports:
+      - "${PGADMIN_PORT:-9050}:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Mailpit: captura todos los correos enviados por la app.
+  # Ver los emails en: http://servidor:8025
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: sydposcr-mailpit
+    restart: unless-stopped
+    networks:
+      - app-network
+    ports:
+      - "9025:8025"   # Web UI
+      - "9125:1025"   # SMTP (usado por la app)
+
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  pgadmin-data:
+    driver: local
+  storage:
+    driver: local
+  vendor:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge

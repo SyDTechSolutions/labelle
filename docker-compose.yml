@@ -23,7 +23,7 @@ services:
     restart: unless-stopped
     working_dir: /var/www/html
     ports:
-      - "${APP_PORT:-8085}:8085"
+      - "${APP_PORT:-8085}:8181"
     environment:
       APP_NAME: ${APP_NAME:-Labelle}
       APP_ENV: ${APP_ENV:-production}
@@ -65,7 +65,7 @@ services:
     networks:
       - app_network
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost/"]
+      test: ["CMD", "curl", "-sf", "http://localhost:8181/"]
       interval: 30s
       timeout: 10s
       retries: 5
