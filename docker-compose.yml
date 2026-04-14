@@ -23,11 +23,7 @@ services:
     restart: unless-stopped
     working_dir: /var/www/html
     ports:
-<<<<<<< HEAD
       - "${APP_PORT:-8085}:8181"
-=======
-      - "${APP_PORT:-8085}:8085"
->>>>>>> 187b8df9e9be39e6cd1ed302eb2bda347edc3ca7
     environment:
       APP_NAME: ${APP_NAME:-Labelle}
       APP_ENV: ${APP_ENV:-production}
