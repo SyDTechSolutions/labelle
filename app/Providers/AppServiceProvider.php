@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Foundation\AliasLoader;
 use App\User;
 use Illuminate\Pagination\Paginator;
@@ -19,6 +20,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+      if ($this->app->environment('production')) {
+          URL::forceScheme('https');
+      }
+
       if (method_exists(Paginator::class, 'useBootstrap')) {
           Paginator::useBootstrap();
       }
