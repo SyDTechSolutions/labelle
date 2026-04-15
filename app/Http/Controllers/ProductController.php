@@ -196,7 +196,6 @@ class ProductController extends Controller
         $newProduct->name = $request->input('name');
         $newProduct->quantity = $request->input('quantity');
         $newProduct->price = $request->input('price');
-        $newProduct->photo_path = null;
         $newProduct->save();
 
         // Sync taxes from the original product
