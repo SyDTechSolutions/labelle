@@ -8,6 +8,8 @@ class Customer extends Model
 {
     protected $guarded = [];
 
+    protected $appends = ['available_credit'];
+
     public function invoices()
     {
         return $this->hasMany(Invoice::class, 'identificacion_cliente', 'identificacion');
@@ -29,5 +31,21 @@ class Customer extends Model
         }
 
         return $query;
+    }
+
+    public function getAvailableCreditAttribute()
+    {
+        //Obtener las facturas a crédito hechas por el cliente
+        $creditInvoices = $this->invoices()
+        ->where('identificacion_cliente', $this->identificacion)
+        ->where('CondicionVenta','02')
+        ->where('cxc_pending_amount', '>', 0)
+        ->get();
+
+        //Sumar cuanto crédito ha usado el cliente
+        $usedCredit = $creditInvoices->sum('cxc_pending_amount');
+
+        //Calcular el crédito disponible
+        return $this->credit_limit - $usedCredit;
     }
 }

@@ -230,13 +230,30 @@
                             </div>
                             <div class="card-body">
                                 <div style="">
-                                    <button 
-                                    type="button"
-                                    class="btn btn-dark mb-2"
-                                    style="font-size: 14px;"
-                                    @click="cleanInvoiceLines()">
-                                        Limpiar lineas
-                                    </button>
+                                    <div class="d-flex flex-wrap align-items-center mb-2">
+                                        <button 
+                                        type="button"
+                                        class="btn btn-dark"
+                                        style="font-size: 14px;"
+                                        @click="cleanInvoiceLines()">
+                                            Limpiar lineas
+                                        </button>
+                                        <div class="ml-3" v-if="showCustomerCreditInfo">
+                                            <span class="font-weight-bold">Crédito disponible:</span>
+                                            <span :class="isCreditLimitExceeded ? 'text-danger font-weight-bold' : 'text-success font-weight-bold'">
+                                                {{ moneyFormat(availableCustomerCredit,symbol) }}
+                                            </span>
+                                        </div>
+                                        <div class="ml-3" v-if="showCustomerCreditInfo">
+                                            <span class="font-weight-bold">Saldo a crédito:</span>
+                                            <span :class="isCreditLimitExceeded ? 'text-danger font-weight-bold' : 'text-info font-weight-bold'">
+                                                {{ moneyFormat(creditAmountToFinance,symbol) }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="alert alert-warning py-2" v-if="isCreditLimitExceeded">
+                                        El cliente ha superado el límite de crédito disponible por {{ moneyFormat(creditExceededAmount,symbol) }} (considerando el abono inicial).
+                                    </div>
 
                                     <div class="d-flex justify-content-end mb-2">
                                         <div class="" style="width: 100px;">
@@ -774,6 +791,7 @@ export default {
             isUpdatingCurrency:false,
             lastEnterTime: 0,
             enterTimeout: 300,
+            customerCreditLimit: 0,
        }
    },
    components:{
@@ -788,6 +806,32 @@ export default {
    computed:{
        isAdmin(){
            return window.App.isAdmin;
+       },
+       isCreditSale(){
+           return this.invoice.CondicionVenta == '02';
+       },
+       showCustomerCreditInfo(){
+           return this.isCreditSale && this.invoice.customer_id > 0;
+       },
+       availableCustomerCredit(){
+           return parseFloat(this.customerCreditLimit ? this.customerCreditLimit : 0);
+       },
+       initialPaymentAmount(){
+           let initialPayment = parseFloat(this.invoice.initialPayment ? this.invoice.initialPayment : 0);
+           return initialPayment > 0 ? initialPayment : 0;
+       },
+       creditAmountToFinance(){
+           let total = parseFloat(this.invoice.TotalComprobante ? this.invoice.TotalComprobante : 0);
+           let effectiveInitialPayment = this.initialPaymentAmount > total ? total : this.initialPaymentAmount;
+           let financedAmount = total - effectiveInitialPayment;
+           return financedAmount > 0 ? financedAmount : 0;
+       },
+       creditExceededAmount(){
+           let exceeded = this.creditAmountToFinance - this.availableCustomerCredit;
+           return exceeded > 0 ? exceeded : 0;
+       },
+       isCreditLimitExceeded(){
+           return this.showCustomerCreditInfo && this.creditAmountToFinance > this.availableCustomerCredit;
        }
    },
    methods:{
@@ -1017,7 +1061,9 @@ export default {
         this.invoice.email = cliente.email
         this.invoice.tipo_identificacion_cliente = cliente.tipo_identificacion
         this.invoice.identificacion_cliente = cliente.identificacion
-        
+        this.customerCreditLimit = cliente.available_credit
+
+
         let discount = parseFloat(cliente.PorcentajeDescuento)
 
         this.customerDiscount = discount
@@ -1480,6 +1526,27 @@ export default {
 
     },
     save(){
+        this.errors = [];
+        this.invoice.ValorDolar = this.dolar_value;
+        if(this.isCreditLimitExceeded){
+            Swal({
+                title: 'Límite de crédito superado',
+                html: `Este cliente no cuenta con el crédito suficiente y ha superado su límite por ${this.moneyFormat(this.creditExceededAmount, this.symbol)} (saldo a crédito: ${this.moneyFormat(this.creditAmountToFinance, this.symbol)}), quiere procesar con la transacción?`,
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                cancelButtonText: 'Cancelar',
+                confirmButtonText: 'Procesar'
+            }).then((result) => {
+                if (result.value) {
+                    this.processSave();
+                }
+            });
+            return;
+        }
+        this.processSave();
+    },
+    processSave(){
         this.errors = [];
         this.invoice.ValorDolar = this.dolar_value;
         if(this.invoice.tipo_identificacion_cliente == '00' && this.invoice.TipoDocumento != '04'){

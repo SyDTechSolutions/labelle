@@ -113,6 +113,8 @@ class CustomerController extends Controller
 
         $data = request()->all();
 
+        $data['credit_limit'] = $data['credit_limit'] ?? 0;
+
         $customer = $this->customerRepo->store($data);
 
         flash('Cliente creado', 'success');
@@ -196,7 +198,10 @@ class CustomerController extends Controller
 
         $v->validate();
 
-        $customer = $this->customerRepo->update($customer, $request->all());
+        $data = $request->all();
+        $data['credit_limit'] = $data['credit_limit'] ?? 0;
+        
+        $customer = $this->customerRepo->update($customer, $data); 
 
         flash('Cliente actualizado', 'success');
 

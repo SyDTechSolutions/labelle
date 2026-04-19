@@ -72,6 +72,7 @@
                                     <th scope="col">Email</th>
                                     <th scope="col">Télefono</th>
                                     <th scope="col">Categoría</th>
+                                    <th scope="col">Limite de crédito</th>
                                     <!-- <th scope="col">Dirección</th> -->
                                     <th scope="col">Acciones</th>
                                 </tr>
@@ -85,6 +86,7 @@
                                     <td>{{ $customer->email }} | {{ $customer->email2 }}</td>
                                     <td>{{ $customer->phone }} | {{ $customer->phone2 }}</td>
                                     <td>{{ $customer->category }}</td>
+                                    <td>{{ money($customer->credit_limit) }}</td>
                                     <!-- <td>{{ $customer->address }}</td> -->
                                     <td>
                                         @can('update', $customer)

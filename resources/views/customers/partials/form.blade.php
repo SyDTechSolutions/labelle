@@ -171,14 +171,26 @@
     @endif
 </div>
 
-<div class="form-group">
-    <label for="PorcentajeDescuento">% Descuento</label>
-    <input type="text" class="form-control {{ $errors->has('PorcentajeDescuento') ? ' is-invalid' : '' }}" id="PorcentajeDescuento" name="PorcentajeDescuento" placeholder="" value="{{ isset($customer) ? $customer->PorcentajeDescuento : old('PorcentajeDescuento') }}">
-    @if ($errors->has('PorcentajeDescuento'))
-    <div class="error invalid-feedback">
-        <strong>{{ $errors->first('PorcentajeDescuento') }}</strong>
+<div class="form-row">
+    <div class="form-group col-md-6">
+        <label for="PorcentajeDescuento">% Descuento</label>
+        <input type="text" class="form-control {{ $errors->has('PorcentajeDescuento') ? ' is-invalid' : '' }}" id="PorcentajeDescuento" name="PorcentajeDescuento" placeholder="" value="{{ isset($customer) ? $customer->PorcentajeDescuento : old('PorcentajeDescuento') }}">
+        @if ($errors->has('PorcentajeDescuento'))
+        <div class="error invalid-feedback">
+            <strong>{{ $errors->first('PorcentajeDescuento') }}</strong>
+        </div>
+        @endif
     </div>
-    @endif
+
+    <div class="form-group col-md-6">
+        <label for="credit_limit">Límite de Crédito</label>
+        <input type="text" class="form-control {{ $errors->has('credit_limit') ? ' is-invalid' : '' }}" id="credit_limit" name="credit_limit" placeholder="" value="{{ isset($customer) ? $customer->credit_limit : old('credit_limit') }}">
+        @if ($errors->has('credit_limit'))
+        <div class="error invalid-feedback">
+            <strong>{{ $errors->first('credit_limit') }}</strong>
+        </div>
+        @endif
+    </div>
 </div>
 
 <div class="form-group">
