@@ -269,16 +269,98 @@ class ProductController extends Controller
     {
         $mimes = ['jpg', 'jpeg', 'bmp', 'png'];
 
-        $ext = $file->guessClientExtension();
+        $ext = strtolower($file->guessClientExtension());
 
         if (in_array($ext, $mimes)) {
+            $storedPath = $this->optimizeAndStorePhoto($file, $ext);
            
             $product->update([
-                "photo_path" => $file->store('photos', 'public')
+                "photo_path" => $storedPath ?: $file->store('photos', 'public')
             ]);
         }
 
         return $product;
+    }
+
+    private function optimizeAndStorePhoto($file, $ext)
+    {
+        $realPath = $file->getRealPath();
+
+        if (! $realPath || ! function_exists('getimagesize')) {
+            return null;
+        }
+
+        $imageSize = @getimagesize($realPath);
+
+        if (! $imageSize || empty($imageSize[0]) || empty($imageSize[1])) {
+            return null;
+        }
+
+        $source = $this->createImageResource($realPath, $ext);
+
+        if (! $source) {
+            return null;
+        }
+
+        $originalWidth = (int) $imageSize[0];
+        $originalHeight = (int) $imageSize[1];
+        $maxWidth = 1200;
+        $maxHeight = 1200;
+        $ratio = min($maxWidth / $originalWidth, $maxHeight / $originalHeight, 1);
+
+        $newWidth = max(1, (int) round($originalWidth * $ratio));
+        $newHeight = max(1, (int) round($originalHeight * $ratio));
+
+        $resized = imagecreatetruecolor($newWidth, $newHeight);
+
+        if ($ext === 'png') {
+            imagealphablending($resized, false);
+            imagesavealpha($resized, true);
+            $transparent = imagecolorallocatealpha($resized, 0, 0, 0, 127);
+            imagefilledrectangle($resized, 0, 0, $newWidth, $newHeight, $transparent);
+        }
+
+        imagecopyresampled($resized, $source, 0, 0, 0, 0, $newWidth, $newHeight, $originalWidth, $originalHeight);
+
+        $fileName = uniqid('product_', true) . '.' . $ext;
+        $relativePath = 'photos/' . $fileName;
+        $destinationPath = storage_path('app/public/' . $relativePath);
+
+        if (! is_dir(dirname($destinationPath))) {
+            mkdir(dirname($destinationPath), 0755, true);
+        }
+
+        $saved = false;
+
+        if (($ext === 'jpg' || $ext === 'jpeg') && function_exists('imagejpeg')) {
+            $saved = imagejpeg($resized, $destinationPath, 80);
+        } elseif ($ext === 'png' && function_exists('imagepng')) {
+            $saved = imagepng($resized, $destinationPath, 7);
+        } elseif ($ext === 'bmp' && function_exists('imagebmp')) {
+            $saved = imagebmp($resized, $destinationPath);
+        }
+
+        imagedestroy($resized);
+        imagedestroy($source);
+
+        return $saved ? $relativePath : null;
+    }
+
+    private function createImageResource($realPath, $ext)
+    {
+        if (($ext === 'jpg' || $ext === 'jpeg') && function_exists('imagecreatefromjpeg')) {
+            return @imagecreatefromjpeg($realPath);
+        }
+
+        if ($ext === 'png' && function_exists('imagecreatefrompng')) {
+            return @imagecreatefrompng($realPath);
+        }
+
+        if ($ext === 'bmp' && function_exists('imagecreatefrombmp')) {
+            return @imagecreatefrombmp($realPath);
+        }
+
+        return null;
     }
 
 }
