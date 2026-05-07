@@ -1089,13 +1089,26 @@ export default {
         
     },
     addProduct(product){
+        // if(!product.CodigoProductoHacienda) {
+        //     flash('Este producto no tiene configurado el códgio cabys', 'danger');
+        //     return;
+        // }
         if(product.taxes.length < 1) {
-            console.log('entroo')
-            flash('Este producto no tiene configurado los impuestos', 'danger');
-        } else if(!product.CodigoProductoHacienda) {
-            flash('Este producto no tiene configurado el códgio cabys', 'danger');
+            axios.get('/taxes?q=0')
+                .then(({data}) => {
+                    let zeroTax = data.data.find(tax => parseFloat(tax.tarifa) === 0);
+                    if(zeroTax) {
+                        product.taxes = [zeroTax];
+                        this.createInvoiceLine(product);
+                        flash('Producto Agregado (impuesto 0% asignado por defecto)');
+                    } else {
+                        flash('Este producto no tiene configurado los impuestos y no se encontró un impuesto del 0%', 'danger');
+                    }
+                })
+                .catch(() => {
+                    flash('Este producto no tiene configurado los impuestos', 'danger');
+                });
         } else {
-            
             this.createInvoiceLine(product)
             flash('Producto Agregado');
         }
