@@ -19,6 +19,8 @@
     th.producto {
     width: 95px;
     max-width: 95px;
+    word-break: break-all;
+    overflow-wrap: break-word;
     }
     
     td.cantidad,
@@ -93,7 +95,7 @@
         <tbody>
             @foreach($invoice->lines as $index => $line)
             <tr>
-                <td class="cantidad">{{ money($line->Cantidad,'',2) }}</td>
+                <td class="cantidad">{{ $line->Cantidad }}</td>
                 <td class="producto">
                     <p>{{ $line->Detalle }}</p>
                     
