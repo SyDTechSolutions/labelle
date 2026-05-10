@@ -143,6 +143,13 @@
                 <td class="producto">TOTAL</td>
                 <td class="precio">{{ money($invoice->TotalComprobante,$invoice->CodigoMoneda,2) }}</td>
             </tr>
+            @if($invoice->first_payment)
+            <tr class="summary">
+                <td class="cantidad"></td>
+                <td class="producto">Abono inicial</td>
+                <td class="precio">{{ money($invoice->first_payment->amount,$invoice->CodigoMoneda,2) }}</td>
+            </tr class="summary">
+            @endif
             <tr class="summary">
                 <td class="cantidad"></td>
                 <td class="producto">Pago con</td>

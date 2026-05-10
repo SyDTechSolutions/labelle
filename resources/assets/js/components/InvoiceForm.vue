@@ -1939,74 +1939,77 @@ export default {
        
    },
    created(){
-    console.log(this.setting)
-    if(this.currency.exchange){
-        this.dolar_value = parseFloat(this.currency.exchange).toFixed(2);
-    }
-
-    if(this.currentInvoice){
-        this.invoice = this.currentInvoice;
-        this.dolar_value = this.currency;
-        this.symbol = this.invoice.CodigoMoneda == "CRC" ? '₡' : '$';
-
-        if(this.currentTipoDocumento == '10'){
-            this.invoice.CondicionVenta = '11';
+        if(this.currency.exchange){
+            this.dolar_value = parseFloat(this.currency.exchange).toFixed(2);
         }
-        
-        if(this.isCreatingNota){
+
+        if(this.currentInvoice){
+            this.invoice = this.currentInvoice;
+            this.dolar_value = this.currency;
+            this.symbol = this.invoice.CodigoMoneda == "CRC" ? '₡' : '$';
+
+            if(this.invoice.first_payment){
+                this.invoice.initialPayment = this.invoice.first_payment.amount;
+            }
+
+            if(this.currentTipoDocumento == '10'){
+                this.invoice.CondicionVenta = '11';
+            }
+            
+            if(this.isCreatingNota){
+                this.invoice.referencias = [];
+            }
+
+            if(this.currentTipoDocumento){
+                this.invoice.TipoDocumento = this.currentTipoDocumento
+            }
+
+            this.invoice.lines.forEach((line, index) => {
+                line.updateStock = (this.invoice.TipoDocumento == '02' || this.invoice.TipoDocumento == '03') ? 1 : 0;
+
+                this.refreshLine(line, index);
+            });
+            this.calculateInvoice(this.invoice.lines)
+            
+        }else if(this.proforma){
+            this.invoice = this.proforma;
             this.invoice.referencias = [];
-        }
+            this.invoice.status = 1;
+            delete this.invoice.id
+            delete this.invoice.created_at
+            delete this.invoice.updated_at
 
-        if(this.currentTipoDocumento){
-            this.invoice.TipoDocumento = this.currentTipoDocumento
-        }
+            this.invoice.lines.forEach((line, index) => {
+                line.updateStock = 0;
+                delete line.id
+                this.proformaid = line.proforma_id;
+                delete line.created_at
+                delete line.updated_at
 
-        this.invoice.lines.forEach((line, index) => {
-            line.updateStock = (this.invoice.TipoDocumento == '02' || this.invoice.TipoDocumento == '03') ? 1 : 0;
+                axios.get(`/products?code=${line.Codigo}`)
+                .then(data => {
+                    if(data.data){
+                        line.existencias = data.data.quantity
+                        
+                    }
 
-            this.refreshLine(line, index);
-        });
-        this.calculateInvoice(this.invoice.lines)
-        
-    }else if(this.proforma){
-        this.invoice = this.proforma;
-        this.invoice.referencias = [];
-        this.invoice.status = 1;
-        delete this.invoice.id
-        delete this.invoice.created_at
-        delete this.invoice.updated_at
+                        this.refreshLine(line, index);
 
-        this.invoice.lines.forEach((line, index) => {
-            line.updateStock = 0;
-            delete line.id
-            this.proformaid = line.proforma_id;
-            delete line.created_at
-            delete line.updated_at
-
-            axios.get(`/products?code=${line.Codigo}`)
-            .then(data => {
-                if(data.data){
-                    line.existencias = data.data.quantity
-                    
-                }
+                }).catch(function (error) {
 
                     this.refreshLine(line, index);
 
-            }).catch(function (error) {
+                });
 
                 this.refreshLine(line, index);
-
             });
+            
+            if(this.proforma.customer_id){
+                this.findClienteById(this.proforma.customer_id);
+            }
 
-            this.refreshLine(line, index);
-        });
-        
-        if(this.proforma.customer_id){
-            this.findClienteById(this.proforma.customer_id);
+            this.calculateInvoice(this.invoice.lines)
         }
-
-        this.calculateInvoice(this.invoice.lines)
-    }
    }
 
 }

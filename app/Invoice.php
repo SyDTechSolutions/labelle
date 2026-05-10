@@ -11,7 +11,7 @@ class Invoice extends Model
 {
     protected $guarded = ['lines','referencias', 'TipoDocumentoName', 'CondicionVentaName', 'MedioPagoName','Pending', 'initialPayment','payments'];
 
-    protected $appends = ['TipoDocumentoName', 'CondicionVentaName', 'MedioPagoName','Pending'];
+    protected $appends = ['TipoDocumentoName', 'CondicionVentaName', 'MedioPagoName','Pending', 'first_payment'];
 
     protected function serializeDate(DateTimeInterface $date)
     {
@@ -56,6 +56,11 @@ class Invoice extends Model
 
     public function getCreatedAtFormatAttribute(){
         return $this->created_at->format('Y-m-d');
+    }
+
+    public function getFirstPaymentAttribute()
+    {
+        return $this->payments()->orderBy('created_at')->first();
     }
 
 

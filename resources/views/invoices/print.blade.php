@@ -275,6 +275,15 @@
 
                         </tr>
 
+                        @if($invoice->first_payment)
+                        <tr>
+
+                            <td class="text-bold-800">Abono inicial</td>
+
+                            <td class="text-bold-800 text-right" style="text-align:right;"> {{ money($invoice->first_payment->amount,$invoice->CodigoMoneda,2) }}</td>
+
+                        </tr>
+                        @endif
 
 
                     @endif

@@ -9,7 +9,8 @@
                    
                         <new-payment @created="add" :invoice="invoice"></new-payment>
                     
-                    <div class="table-responsive">
+                    <div class="table-responsive" style="position:relative;">
+                        <loading :show="loader" position-css="absolute"></loading>
                         <table class="table">
                             <thead>
                                 <tr>
@@ -27,7 +28,7 @@
                                 
                                 <tr v-for="(payment, index) in items" :key="payment.id">
                                     
-                                    <td>{{ payment.created_at }}</td>
+                                    <td>{{ formatDate(payment.created_at) }}</td>
                                     <td>{{ moneyFormat(payment.amount) }}</td>
                                     <td>{{ payment.modoPago }}</td>
                                     <td>{{ payment.comprobante }}</td>
@@ -70,6 +71,7 @@
 <script>
     import NewPayment from './NewPayment.vue'
     import collection from '../mixins/collection'
+    import Loading from './Loading.vue'
 
 
     export default {
@@ -79,13 +81,15 @@
                 dataSet: false,
                 q: '',
                 invoiceId: false,
-                invoice:false
+                invoice:false,
+                loader: false
                
                 
             }
         },
         components:{
-          NewPayment
+          NewPayment,
+          Loading
         },
         mixins:[collection],
 
@@ -113,8 +117,10 @@
             },
 
             fetch(page){
+                this.loader = true;
                 axios.get(this.url(page))
                 .then(this.refresh)
+                .finally(() => { this.loader = false; });
             },
 
             url(page){
@@ -151,7 +157,10 @@
                 .then( ({data}) =>{
                     this.invoice = data;
                 })
-            }
+            },
+            formatDate(date){
+                return moment(date).format('DD/MM/YYYY');
+            },
 
         },
         created(){

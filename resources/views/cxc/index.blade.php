@@ -132,11 +132,14 @@
         })
 
         $('#cxcModal').on('show.bs.modal', function (e) {
+            var button = $(e.relatedTarget);
+            var customer_id = button.data('customer');
+            // Manda el customer_id y el tipo de cuenta
+            window.events.$emit('showCxcModal', customer_id, 'cxc');
+        })
 
-        var button = $(e.relatedTarget)
-        var customer_id = button.attr('data-customer');
-        //Manda el tipo cuenta es cxc
-        window.events.$emit('showCxcModal', customer_id,'cxc');
+        $('#cxcModal').on('hidden.bs.modal', function () {
+            window.events.$emit('closeCxcModal');
         })
 </script>
 @endsection
