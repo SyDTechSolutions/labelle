@@ -41,6 +41,38 @@ class CustomerCxCController extends Controller
 
         return view('customers.cxc.print', ['data' => $items, 'customer' => $customer]);
     }
+    public function printTicket(Customer $customer)
+    {
+        $invoices = Invoice::where('CondicionVenta', '02')
+            ->where('customer_id', $customer->id)
+            ->where(function ($query) {
+                $query->where('TipoDocumento', '01')
+                    ->orWhere('TipoDocumento', '04');
+            })
+            ->where('TotalWithNota', '>', 1)
+            ->select('id', 'created_at', 'consecutivo', 'TotalWithNota', 'PlazoCredito', 'cxc_pending_amount')
+            ->get();
+
+        $invoiceIds = $invoices->pluck('id');
+        $payments = Payment::with('invoice:id,consecutivo')
+            ->whereIn('invoice_id', $invoiceIds)
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        $totalFacturado = $invoices->sum('TotalWithNota');
+        $totalAbonado   = $payments->sum('amount');
+        $saldoPendiente = $totalFacturado - $totalAbonado;
+
+        return view('customers.cxc.ticket', compact(
+            'customer',
+            'invoices',
+            'payments',
+            'totalFacturado',
+            'totalAbonado',
+            'saldoPendiente'
+        ));
+    }
+
     //No esta funcionando muy bien 
     public function printPagadas(Customer $customer)
     {

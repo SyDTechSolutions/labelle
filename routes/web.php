@@ -137,6 +137,7 @@ Route::post('/invoices/{invoice}/notacredito', [NotaCreditoController::class, 's
 Route::get('/invoices/{invoice}/notadebito', [NotaDebitoController::class, 'create']);
 Route::post('/invoices/{invoice}/notadebito', [NotaDebitoController::class, 'store']);
 Route::get('/invoices/{invoice}/payments', [PaymentInvoiceController::class, 'index']);
+Route::get('/invoices/{invoice}/payments/ticket', [PaymentInvoiceController::class, 'printTicket']);
 Route::post('/invoices/{invoice}/payments', [PaymentInvoiceController::class, 'store']);
 Route::put('/invoices/{invoice}/sendhacienda', [InvoiceController::class, 'sendhacienda']);
 Route::get('/invoices/{invoice}/download/xml', [InvoiceController::class, 'xml']);
@@ -186,6 +187,7 @@ Route::post('customers/import', [CustomerController::class, 'import']);
 Route::get('/customers/{customer}/cxc', [CustomerCxCController::class, 'index']);
 Route::get('/customers/{customer}/cxc/print', [CustomerCxCController::class, 'print']);
 Route::get('/customers/{customer}/cxc/printP', [CustomerCxCController::class, 'printPagadas']);
+Route::get('/customers/{customer}/cxc/ticket', [CustomerCxCController::class, 'printTicket']);
 
 Route::get('/purchases/{purchase}/cxp', [ProviderCxpController::class, 'index']);
 Route::get('/purchases/{purchase}/cxp/print', [ProviderCxpController::class, 'print']);

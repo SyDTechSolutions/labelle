@@ -49,6 +49,15 @@ class PaymentInvoiceController extends Controller
         return $payment;
     }
 
+    public function printTicket(Invoice $invoice)
+    {
+        $payments      = $invoice->payments()->orderBy('created_at', 'asc')->get();
+        $totalAbonado  = $payments->sum('amount');
+        $saldoPendiente = (float) $invoice->TotalComprobante - $totalAbonado;
+
+        return view('cxc.ticket-invoice', compact('invoice', 'payments', 'totalAbonado', 'saldoPendiente'));
+    }
+
     /**
      * Remove the specified resource from storage.
      *

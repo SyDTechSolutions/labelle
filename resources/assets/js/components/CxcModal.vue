@@ -147,6 +147,9 @@
                     <button type="button" class="btn btn-outline-primary btn-sm" @click="print()" :disabled="!customer">
                         <span class="oi oi-print mr-1"></span> Imprimir
                     </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" @click="printTicket()" :disabled="!customer">
+                        <span class="oi oi-tags mr-1"></span> Tiquete
+                    </button>
                     <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal" @click="clear()">
                         Cerrar
                     </button>
@@ -296,6 +299,11 @@
                 } else {
                     window.open(`/customers/${this.customerId}/cxc/printP`, 'name', 'width=800,height=400');
                 }
+            },
+
+            /** Abre el tiquete de abonos y saldo pendiente del cliente */
+            printTicket() {
+                window.open(`/customers/${this.customerId}/cxc/ticket`, 'ticket', 'width=400,height=600');
             },
 
             fetch(page) {

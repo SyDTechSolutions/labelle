@@ -61,6 +61,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-link waves-effect" @click="print()">IMPRIMIR</button>
+                    <button type="button" class="btn btn-link waves-effect" @click="printTicket()" :disabled="!invoice">TIQUETE</button>
                     <button type="button" class="btn btn-link waves-effect" data-dismiss="modal">CERRAR</button>
                 </div>
             </div>
@@ -114,6 +115,10 @@
             print(){
                 //window.open(`/cxc/${this.invoiceId}/print`,'_blank');
                window.location = `/cxc/${this.invoiceId}/print`;
+            },
+
+            printTicket(){
+                window.open(`/invoices/${this.invoiceId}/payments/ticket`, 'ticket', 'width=400,height=600');
             },
 
             fetch(page){

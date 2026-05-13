@@ -73,7 +73,7 @@ class AppServiceProvider extends ServiceProvider
          'purchases.pdf', 'emails.purchases.send', 'reports.products.sold_print', 'cxp.print','cxp.printEstado', 'cierres.print', '
          reports.products.purchased_print', 'reports.sellers.invoices_print', 'reports.customers.invoices_print', 'proformaPurchases.print', 
          'proformaPurchases.ticket', 'proformaPurchases.pdf', 'emails.proformaPurchases.send', 'reports.cxps.print', 'reports.cxcs.print', 
-         'reports.expenses.print', 'invoices.partials.form','electronicInvoice.partials.form', 'customers.cxc.print','customers.cxc.printHistorial','reports.facturasProveedor.print'
+         'reports.expenses.print', 'invoices.partials.form','electronicInvoice.partials.form', 'customers.cxc.print','customers.cxc.printHistorial','customers.cxc.ticket','cxc.ticket-invoice','reports.facturasProveedor.print'
         ,'electronicInvoice.print','electronicInvoice.ticket','electronicInvoice.pdf','receptors.create'], function ($view) {
             $setting = \App\Setting::with('configFactura')->first();
 
