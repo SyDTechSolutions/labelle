@@ -165,7 +165,11 @@
                                 </tr>
                                @endforeach
                                    @if ($products)
-                                    <td  colspan="8" class="pagination-container">{!!$products->appends(['q' => $search['q']])->render()!!}</td>
+                                    <td  
+                                    colspan="8" 
+                                    class="pagination-container">
+                                        {!!$products->appends(['q' => $search['q'], 'precision'=> $search['precision']])->render()!!}
+                                    </td>
                                 @endif
                             
                             </tbody>
