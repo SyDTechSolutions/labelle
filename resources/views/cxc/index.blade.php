@@ -112,9 +112,9 @@
                             
                             </tbody>
                         </table>
-                        <payments-modal></payments-modal>
-                        <cxc-modal></cxc-modal>
                    </div>
+                    <payments-modal></payments-modal>
+                    <cxc-modal></cxc-modal>
                 </div>
             </div>
         </div>
